@@ -1,0 +1,49 @@
+%M=interpolacion_matrix([x_0 x_1],[y_0 y_1], b)
+%interpola una zona de la matriz
+%V: matriz de valores
+%[x_0 x_1]: valores de posición horizontal
+%[y_0 y_1]: valores de posición vertical
+%b: orientación 1: horizontal, 0: vertical
+%tener cuidado en definir bordes horizontales y verticales c=0 todo el
+%registro, c=1 parcial vertical, c=2 parcial horizontal
+function M=interpolacion_matrix(V,[x_0 x_1],[y_0 y_1], b)
+%verificar que sean mayores que 0 y dentro de V
+[n m] = size(V);
+M=V;
+if c==0
+elseif c==1
+            
+elseif c==2
+else
+          msgbox('Error al ingresar zona de registro')
+end
+
+
+if x_0>=0 && x_1>x_0  && x_1<=n && y_0>=0 && y_1>y_0 && y_1<=m 
+    if b==1
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        for j=y_0:y_1
+        m(j;1)=(V(x_1,j)-V(x_0,j))/(x_1-x_0);
+        c(j;1)=(V(x_0,j)*x_1-V(x_1,j)*x_0)/(x_1-x_0);
+        T(j,X)=m(j;1)*X+c(j;1)
+        end
+        M(Y,X)=T;    
+    elseif b==0
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        for i=x_0:x_1
+        m(i)=(V(y_1,i)-V(y_0,i))/(y_1-y_0);
+        c(i)=(V(y_0,i)*y_1-V(y_1,i)*y_0)/(y_1-y_0);
+        T(X,i)=m(j;1)*Y+c(j;1)
+        end
+        M(Y,X)=T;
+    else
+      msgbox('Error al ingresar orientación 0 para vertical o bien 1 para horizontal')
+    end
+else
+    msgbox('Error al ingresar tus datos de interpolación')
+end
+    
+
+end
