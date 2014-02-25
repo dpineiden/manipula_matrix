@@ -15,15 +15,19 @@
 %q= es el ratio vertical que recoge hacia arriba y abajo del punto elegido
 %ambos determinan una matriz de dimensión 2p+1 x 2q+1 con centro el punto
 %escogido
-%factor: es un par de valores que le asigna un peso a cada vector;
-%
-%difusa.
-function M=interpolacion_matrix(V,x,y, b,c,p,q,factor)
+%factor: es un par de valores que le asigna un peso la interpolación lineal
+%difusa, tiene valor de 0 a 1.
+%$factor_intercambio: es el factor que se aplica al intercambio de la zona, primero a 
+%la misma zona y luego a la matriz de reemplazo
+function M=interpolacion_matrix(V,x,y, b,c,p,q,factor, factor_intercambio)
 %verificar que sean mayores que 0 y dentro de V
 [n_v, m_v] = size(V);
-M=V;
-if length(x) <=2 || length(y) <=2  || length(factor) <=1 
-factor=[factor,1-factor];    
+M=double(V);
+%%se evalua si corresponde operar la función
+if length(x) <=2 || length(y) <=2  || factor <=1 && factor >=0 || factor_intercambio <=1 && factor_intercambio >=0
+%%se construyen los vectores de factor y factor_intercambio
+factor=[factor,1-factor];  
+factor_intercambio=[factor_intercambio,1-factor_intercambio];  
 x_0=x(1);
 x_1=x(2);
 y_0=y(1);
@@ -50,19 +54,20 @@ if x_0>=1 && x_1>x_0  && x_1<=m_v && y_0>=1 && y_1>y_0 && y_1<=n_v
         for j=y_0:y_1
         m(j,1)=(V(j,x_1)-V(j,x_0))/(x_1-x_0);
         c(j,1)=(V(j,x_0)*x_1-V(j,x_1)*x_0)/(x_1-x_0);
-        %matriz grupo A-varian las columnas        
+        %%matriz grupo A-varian las columnas        
         I_0(1,:)=[max(j-q,1), max(x_0-p,1)];
         I_1(1,:)=[min(j+q,n_v),min(x_0+p,m_v)];
-        %matriz grupo B
+        %%matriz grupo B
         I_0(2,:)=[max(j-q,1), max(x_1-p,1)];
         I_1(2,:)=[min(j+q,n_v),min(x_1+p,m_v)];
-        %
+        %%Grupos de matrices de adyacencia en torno a pixel frontera
         G_a=V(I_0(1,1):I_1(1,1),I_0(1,2):I_1(1,2));
         G_b=V(I_0(2,1):I_1(2,1),I_0(2,2):I_1(2,2));
-        %
+        %%tamaño de matrices de adyacencia
         [n_a, m_a]=size(G_a);
         [n_b, m_b]=size(G_b);
-        %
+        %%se determina aletoriamente que valor de matrices de adyacencia
+        %%obtener
         for k=1:lx
         r_a_n=randi(n_a);
         r_a_m=randi(m_a);
@@ -71,18 +76,21 @@ if x_0>=1 && x_1>x_0  && x_1<=m_v && y_0>=1 && y_1>y_0 && y_1<=n_v
         ga(k)=G_a(r_a_n,r_a_m);
         gb(k)=G_b(r_b_n,r_b_m);
         end
-        %
-        alpha=[1:lx]/lx;
-        beta=1-alpha;
-        %
+        %vector factor de posición del cada pixel
+        beta=[1:lx]/lx;        
+        alpha=1-beta;
+        %%Se obtienen los vectores de interpolacion lineal y difusa pura.
         vectorlineal=round(double(m(j,1)))*X+c(j,1);
         vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
-        %
-        vector=round((vectorlineal+vectordifuso)/2);
-        %
+        %#se suman linealmente
+        vector=round((factor(1)*vectorlineal+factor(2)*vectordifuso));
+        %%se asocia la línea correspondiente de T con el vector.
         T(j,:)=vector;
         end
-        M(Y,X)=T;    
+        %%se rescata la matriz a corregir original
+        M_o=double(M(Y,X));
+        %%se determina la nueva matriz
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;    
     elseif b==0
         X=[x_0:x_1];
         Y=[y_0:y_1];
@@ -113,18 +121,19 @@ if x_0>=1 && x_1>x_0  && x_1<=m_v && y_0>=1 && y_1>y_0 && y_1<=n_v
         gb(k)=G_b(r_b_n,r_b_m);
         end
         %
-        alpha=[1:ly]/ly;
-        beta=1-alpha;
+        beta=[1:ly]/ly;
+        alpha=1-beta;
         %
         vectorlineal=m(j,1)*X+c(j,1);
-        vectordifuso=alpha.*ga+beta.*gb;
+        vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
         %
         vector=round((vectorlineal*factor(1)+vectordifuso*factor(2)));
         %
 
         T(:,i)=vector;
         end
-        M(Y,X)=T;
+        M_o=double(M(Y,X));
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;    
     else
       msgbox('Error al ingresar orientación 0 para vertical o bien 1 para horizontal')
     end
