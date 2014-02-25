@@ -1,0 +1,367 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>interpolacion_matrix</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-02-25"><meta name="DC.source" content="interpolacion_matrix.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%M=interpolacion_matrix(V,x,y, b,c,p,q,factor)</span>
+<span class="comment">%interpola una zona de la matriz</span>
+<span class="comment">%V: matriz de valores</span>
+<span class="comment">%[x_0 x_1]: valores de posici&oacute;n horizontal</span>
+<span class="comment">%[y_0 y_1]: valores de posici&oacute;n vertical</span>
+<span class="comment">%b: orientaci&oacute;n 1: horizontal, 0: vertical</span>
+<span class="comment">%tener cuidado en definir bordes horizontales y verticales c=0 todo el</span>
+<span class="comment">%registro vertical, c=1 todo registro horizontal, c=2 parcial, se toman</span>
+<span class="comment">%ambos vectores es una interpolaci&oacute;n difusa, basada en la asgincaci&oacute;n de un valor obtenido a partir</span>
+<span class="comment">% de las zonas contiguas de cada pixel frontera, seleccionado al azar</span>
+<span class="comment">%la zona contigua es criterio del usuario, basada un un valor p: cantidad</span>
+<span class="comment">%de pixeles en torno a la vertical, y q cantidad de pixeles en torno a la</span>
+<span class="comment">%horizontal</span>
+<span class="comment">%p= es el ratio horizontal que recoge a la izq y derecha del punto elegido</span>
+<span class="comment">%q= es el ratio vertical que recoge hacia arriba y abajo del punto elegido</span>
+<span class="comment">%ambos determinan una matriz de dimensi&oacute;n 2p+1 x 2q+1 con centro el punto</span>
+<span class="comment">%escogido</span>
+<span class="comment">%factor: es un par de valores que le asigna un peso la interpolaci&oacute;n lineal</span>
+<span class="comment">%difusa, tiene valor de 0 a 1.</span>
+<span class="comment">%$factor_intercambio: es el factor que se aplica al intercambio de la zona, primero a</span>
+<span class="comment">%la misma zona y luego a la matriz de reemplazo</span>
+<span class="keyword">function</span> M=interpolacion_matrix(V,x,y, b,c,p,q,factor, factor_intercambio)
+<span class="comment">%verificar que sean mayores que 0 y dentro de V</span>
+[n_v, m_v] = size(V);
+M=double(V);
+<span class="comment">%%se evalua si corresponde operar la funci&oacute;n</span>
+<span class="keyword">if</span> length(x) &lt;=2 || length(y) &lt;=2  || factor &lt;=1 &amp;&amp; factor &gt;=0 || factor_intercambio &lt;=1 &amp;&amp; factor_intercambio &gt;=0
+<span class="comment">%%se construyen los vectores de factor y factor_intercambio</span>
+factor=[factor,1-factor];
+factor_intercambio=[factor_intercambio,1-factor_intercambio];
+x_0=x(1);
+x_1=x(2);
+y_0=y(1);
+y_1=y(2);
+
+<span class="keyword">if</span> c==0
+    y_0=1;
+    y_1=n_v;
+<span class="keyword">elseif</span> c==1
+    x_0=1;
+    x_1=m_v;
+<span class="keyword">elseif</span> c==2
+
+<span class="keyword">else</span>
+          msgbox(<span class="string">'Error al ingresar zona de registro'</span>)
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> x_0&gt;=1 &amp;&amp; x_1&gt;x_0  &amp;&amp; x_1&lt;=m_v &amp;&amp; y_0&gt;=1 &amp;&amp; y_1&gt;y_0 &amp;&amp; y_1&lt;=n_v
+    <span class="keyword">if</span> b==1
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        lx=length(X);
+        ly=length(Y);
+        <span class="keyword">for</span> j=y_0:y_1
+        m(j,1)=(V(j,x_1)-V(j,x_0))/(x_1-x_0);
+        c(j,1)=(V(j,x_0)*x_1-V(j,x_1)*x_0)/(x_1-x_0);
+        <span class="comment">%%matriz grupo A-varian las columnas</span>
+        I_0(1,:)=[max(j-q,1), max(x_0-p,1)];
+        I_1(1,:)=[min(j+q,n_v),min(x_0+p,m_v)];
+        <span class="comment">%%matriz grupo B</span>
+        I_0(2,:)=[max(j-q,1), max(x_1-p,1)];
+        I_1(2,:)=[min(j+q,n_v),min(x_1+p,m_v)];
+        <span class="comment">%%Grupos de matrices de adyacencia en torno a pixel frontera</span>
+        G_a=V(I_0(1,1):I_1(1,1),I_0(1,2):I_1(1,2));
+        G_b=V(I_0(2,1):I_1(2,1),I_0(2,2):I_1(2,2));
+        <span class="comment">%%tama&ntilde;o de matrices de adyacencia</span>
+        [n_a, m_a]=size(G_a);
+        [n_b, m_b]=size(G_b);
+        <span class="comment">%%se determina aletoriamente que valor de matrices de adyacencia</span>
+        <span class="comment">%%obtener</span>
+        <span class="keyword">for</span> k=1:lx
+        r_a_n=randi(n_a);
+        r_a_m=randi(m_a);
+        r_b_n=randi(n_b);
+        r_b_m=randi(m_b);
+        ga(k)=G_a(r_a_n,r_a_m);
+        gb(k)=G_b(r_b_n,r_b_m);
+        <span class="keyword">end</span>
+        <span class="comment">%vector factor de posici&oacute;n del cada pixel</span>
+        beta=[1:lx]/lx;
+        alpha=1-beta;
+        <span class="comment">%%Se obtienen los vectores de interpolacion lineal y difusa pura.</span>
+        vectorlineal=round(double(m(j,1)))*X+c(j,1);
+        vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
+        <span class="comment">%#se suman linealmente</span>
+        vector=round((factor(1)*vectorlineal+factor(2)*vectordifuso));
+        <span class="comment">%%se asocia la l&iacute;na correspondiente de T con el vector.</span>
+        T(j,:)=vector;
+        <span class="keyword">end</span>
+        <span class="comment">%%se rescata la matriz a corregir original</span>
+        M_o=double(M(Y,X));
+        <span class="comment">%%se determina la nueva matriz</span>
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;
+    <span class="keyword">elseif</span> b==0
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        lx=length(X);
+        ly=length(Y);
+        <span class="keyword">for</span> i=x_0:x_1
+        m(1,i)=(V(y_1,i)-V(y_0,i))/(y_1-y_0);
+        c(1,i)=(V(y_0,i)*y_1-V(y_1,i)*y_0)/(y_1-y_0);
+        <span class="comment">%matriz grupo A-varian las filas</span>
+        I_0(1,:)=[max(y_0-q,1), max(i-p,1)];
+        I_1(1,:)=[min(y_0+q,n_v),min(i+p,m_v)];
+        <span class="comment">%matriz grupo B</span>
+        I_0(2,:)=[max(y_1-q,1), max(i-p,1)];
+        I_1(2,:)=[min(y_1+q,n_v),min(i+p,m_v)];
+        <span class="comment">%</span>
+        G_a=V(I_0(1,1):I_1(1,1),I_0(1,2):I_1(1,2));
+        G_b=V(I_0(2,1):I_1(2,1),I_0(2,2):I_1(2,2));
+        <span class="comment">%</span>
+        [n_a, m_a]=size(G_a);
+        [n_b, m_b]=size(G_b);
+        <span class="comment">%</span>
+        <span class="keyword">for</span> k=1:ly
+        r_a_n=randi(n_a);
+        r_a_m=randi(m_a);
+        r_b_n=randi(n_b);
+        r_b_m=randi(m_b);
+        ga(k)=G_a(r_a_n,r_a_m);
+        gb(k)=G_b(r_b_n,r_b_m);
+        <span class="keyword">end</span>
+        <span class="comment">%</span>
+        beta=[1:ly]/ly;
+        alpha=1-beta;
+        <span class="comment">%</span>
+        vectorlineal=m(j,1)*X+c(j,1);
+        vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
+        <span class="comment">%</span>
+        vector=round((vectorlineal*factor(1)+vectordifuso*factor(2)));
+        <span class="comment">%</span>
+
+        T(:,i)=vector;
+        <span class="keyword">end</span>
+        M_o=double(M(Y,X));
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;
+    <span class="keyword">else</span>
+      msgbox(<span class="string">'Error al ingresar orientaci&oacute;n 0 para vertical o bien 1 para horizontal'</span>)
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    msgbox(<span class="string">'Error al ingresar tus datos de interpolaci&oacute;n'</span>)
+<span class="keyword">end</span>
+<span class="keyword">else</span>
+    msgbox(<span class="string">'Error en largo de vetores x o y o factor'</span>)
+<span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Error using interpolacion_matrix (line 24)
+Not enough input arguments.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%M=interpolacion_matrix(V,x,y, b,c,p,q,factor)
+%interpola una zona de la matriz
+%V: matriz de valores
+%[x_0 x_1]: valores de posición horizontal
+%[y_0 y_1]: valores de posición vertical
+%b: orientación 1: horizontal, 0: vertical
+%tener cuidado en definir bordes horizontales y verticales c=0 todo el
+%registro vertical, c=1 todo registro horizontal, c=2 parcial, se toman
+%ambos vectores es una interpolación difusa, basada en la asgincación de un valor obtenido a partir
+% de las zonas contiguas de cada pixel frontera, seleccionado al azar
+%la zona contigua es criterio del usuario, basada un un valor p: cantidad
+%de pixeles en torno a la vertical, y q cantidad de pixeles en torno a la
+%horizontal
+%p= es el ratio horizontal que recoge a la izq y derecha del punto elegido
+%q= es el ratio vertical que recoge hacia arriba y abajo del punto elegido
+%ambos determinan una matriz de dimensión 2p+1 x 2q+1 con centro el punto
+%escogido
+%factor: es un par de valores que le asigna un peso la interpolación lineal
+%difusa, tiene valor de 0 a 1.
+%$factor_intercambio: es el factor que se aplica al intercambio de la zona, primero a 
+%la misma zona y luego a la matriz de reemplazo
+function M=interpolacion_matrix(V,x,y, b,c,p,q,factor, factor_intercambio)
+%verificar que sean mayores que 0 y dentro de V
+[n_v, m_v] = size(V);
+M=double(V);
+%%se evalua si corresponde operar la función
+if length(x) <=2 || length(y) <=2  || factor <=1 && factor >=0 || factor_intercambio <=1 && factor_intercambio >=0
+%%se construyen los vectores de factor y factor_intercambio
+factor=[factor,1-factor];  
+factor_intercambio=[factor_intercambio,1-factor_intercambio];  
+x_0=x(1);
+x_1=x(2);
+y_0=y(1);
+y_1=y(2);
+
+if c==0
+    y_0=1;
+    y_1=n_v;
+elseif c==1
+    x_0=1;
+    x_1=m_v;
+elseif c==2            
+
+else
+          msgbox('Error al ingresar zona de registro')
+end
+
+if x_0>=1 && x_1>x_0  && x_1<=m_v && y_0>=1 && y_1>y_0 && y_1<=n_v 
+    if b==1
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        lx=length(X);
+        ly=length(Y);
+        for j=y_0:y_1
+        m(j,1)=(V(j,x_1)-V(j,x_0))/(x_1-x_0);
+        c(j,1)=(V(j,x_0)*x_1-V(j,x_1)*x_0)/(x_1-x_0);
+        %%matriz grupo A-varian las columnas        
+        I_0(1,:)=[max(j-q,1), max(x_0-p,1)];
+        I_1(1,:)=[min(j+q,n_v),min(x_0+p,m_v)];
+        %%matriz grupo B
+        I_0(2,:)=[max(j-q,1), max(x_1-p,1)];
+        I_1(2,:)=[min(j+q,n_v),min(x_1+p,m_v)];
+        %%Grupos de matrices de adyacencia en torno a pixel frontera
+        G_a=V(I_0(1,1):I_1(1,1),I_0(1,2):I_1(1,2));
+        G_b=V(I_0(2,1):I_1(2,1),I_0(2,2):I_1(2,2));
+        %%tamaño de matrices de adyacencia
+        [n_a, m_a]=size(G_a);
+        [n_b, m_b]=size(G_b);
+        %%se determina aletoriamente que valor de matrices de adyacencia
+        %%obtener
+        for k=1:lx
+        r_a_n=randi(n_a);
+        r_a_m=randi(m_a);
+        r_b_n=randi(n_b);
+        r_b_m=randi(m_b);
+        ga(k)=G_a(r_a_n,r_a_m);
+        gb(k)=G_b(r_b_n,r_b_m);
+        end
+        %vector factor de posición del cada pixel
+        beta=[1:lx]/lx;        
+        alpha=1-beta;
+        %%Se obtienen los vectores de interpolacion lineal y difusa pura.
+        vectorlineal=round(double(m(j,1)))*X+c(j,1);
+        vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
+        %#se suman linealmente
+        vector=round((factor(1)*vectorlineal+factor(2)*vectordifuso));
+        %%se asocia la lína correspondiente de T con el vector.
+        T(j,:)=vector;
+        end
+        %%se rescata la matriz a corregir original
+        M_o=double(M(Y,X));
+        %%se determina la nueva matriz
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;    
+    elseif b==0
+        X=[x_0:x_1];
+        Y=[y_0:y_1];
+        lx=length(X);
+        ly=length(Y);        
+        for i=x_0:x_1
+        m(1,i)=(V(y_1,i)-V(y_0,i))/(y_1-y_0);
+        c(1,i)=(V(y_0,i)*y_1-V(y_1,i)*y_0)/(y_1-y_0);
+        %matriz grupo A-varian las filas
+        I_0(1,:)=[max(y_0-q,1), max(i-p,1)];
+        I_1(1,:)=[min(y_0+q,n_v),min(i+p,m_v)];
+        %matriz grupo B
+        I_0(2,:)=[max(y_1-q,1), max(i-p,1)];
+        I_1(2,:)=[min(y_1+q,n_v),min(i+p,m_v)];
+        %
+        G_a=V(I_0(1,1):I_1(1,1),I_0(1,2):I_1(1,2));
+        G_b=V(I_0(2,1):I_1(2,1),I_0(2,2):I_1(2,2));
+        %
+        [n_a, m_a]=size(G_a);
+        [n_b, m_b]=size(G_b);
+        %
+        for k=1:ly
+        r_a_n=randi(n_a);
+        r_a_m=randi(m_a);
+        r_b_n=randi(n_b);
+        r_b_m=randi(m_b);
+        ga(k)=G_a(r_a_n,r_a_m);
+        gb(k)=G_b(r_b_n,r_b_m);
+        end
+        %
+        beta=[1:ly]/ly;
+        alpha=1-beta;
+        %
+        vectorlineal=m(j,1)*X+c(j,1);
+        vectordifuso=alpha.*round(double(ga))+beta.*round(double(gb));
+        %
+        vector=round((vectorlineal*factor(1)+vectordifuso*factor(2)));
+        %
+
+        T(:,i)=vector;
+        end
+        M_o=double(M(Y,X));
+        M(Y,X)=factor_intercambio(1)*M_o+factor_intercambio(2)*T;    
+    else
+      msgbox('Error al ingresar orientación 0 para vertical o bien 1 para horizontal')
+    end
+else
+    msgbox('Error al ingresar tus datos de interpolación')
+end
+else
+    msgbox('Error en largo de vetores x o y o factor')  
+end
+
+end
+##### SOURCE END #####
+--></body></html>

@@ -14,7 +14,7 @@ Nombre_IV='';
 j=1;
 for i=1:n
     Indice=getfield(IndiceVegetacion,lista{i,1});
-    [n_I m_I]=size(Indice);
+    [n_I, m_I]=size(Indice);
     Uno=any(Indice(:));
 %     if n_I<m_I
 %         V=Indice*Indice';

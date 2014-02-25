@@ -1,0 +1,43 @@
+DIRECTORIO=pwd;
+cd(DIRECTORIO);
+lista={'banda674.tif'; 'banda702.tif'; 'banda711.tif'; 'banda749.tif'};
+[n m] = size(lista); %n indica posicion lista(n,1)
+i=1;
+file=char(strcat(DIRECTORIO,'/imagenes/',lista(i,1)));
+[X, R] = geotiffread(file);
+factor=.2;
+factor_intercambio=0.1;
+p=25;
+q=25;
+b=1;
+c=0;
+x=[600,800];
+y=[1 3];
+V1=X(:,:,1);
+V2=X(:,:,2);
+V3=X(:,:,3);
+color={'R';'G';'B'};
+INFO = geotiffinfo(FilePath);
+
+for i=1:n
+    figure
+    for j=1:3
+M(:,:,j)=interpolacion_matrix(X(:,:,j),x,y, b,c,p,q,factor,factor_intercambio);
+subplot(1,5,j)
+imshow(M(:,:,j))
+titulo=strcat(lista(i,1),' en :',color{j});
+title(titulo); 
+    end
+subplot(1,5,4)
+imshow(M)
+title([lista(i,1),',corregida.'])    
+subplot(1,5,5)
+imshow(X)
+title(lista(i,1))    
+
+%guardar imagenes corregidas:
+  file_rev=char(strcat(DIRECTORIO,'/imagenes/rev_',lista(i,1)));
+  geotiffwrite(file_rev,I_16b,R,'GeoKeyDirectoryTag',UTM.geokey); 
+  
+  
+end
